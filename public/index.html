@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas Histológico</title>
+
+  <style>
+    :root {
+      --hematoxilina: #4b2a7b;
+      --eosina: #e86a92;
+      --rosa-claro: #fdeef3;
+      --fondo: #faf7fb;
+      --texto: #2d2438;
+      --gris: #6d6478;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--fondo);
+      color: var(--texto);
+      line-height: 1.5;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--hematoxilina), var(--eosina));
+      color: white;
+      padding: 36px 20px;
+      text-align: center;
+    }
+
+    header h1 { margin: 0 0 6px; font-size: clamp(1.8rem, 5vw, 2.6rem); }
+    header p { margin: 0; opacity: .9; }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: white;
+      box-shadow: 0 2px 8px #0000000f;
+      display: flex;
+      justify-content: center;
+      gap: 18px;
+      padding: 12px;
+      flex-wrap: wrap;
+    }
+
+    nav a { color: var(--hematoxilina); font-weight: 600; text-decoration: none; }
+
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+    section { margin-bottom: 44px; }
+
+    h2 { color: var(--hematoxilina); }
+
+    .barra {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .barra input[type=search] { flex: 1 1 220px; }
+
+    .filtros { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+
+    .chip {
+      background: white;
+      border: 1px solid #d9cfe3;
+      color: var(--hematoxilina);
+      border-radius: 999px;
+      padding: 6px 14px;
+    }
+
+    .chip.activo { background: var(--hematoxilina); color: white; border-color: var(--hematoxilina); }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .principal { background: var(--hematoxilina); color: white; }
+    .ver { background: var(--rosa-claro); color: #8a2350; }
+    .editar { background: #f3d98b; color: #3b2f00; }
+    .eliminar { background: #c94747; color: white; }
+    .secundario { background: #ece7f1; color: var(--texto); }
+
+    .tarjetas {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .tarjeta {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 12px #4b2a7b14;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tarjeta img, .sin-imagen {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      background: repeating-radial-gradient(circle at 30% 40%, #f7c6d6 0 10px, #fbe3eb 10px 22px);
+    }
+
+    .sin-imagen { display: grid; place-items: center; color: #8a2350; font-size: 13px; }
+
+    .tarjeta .cuerpo { padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .tarjeta h3 { margin: 0; font-size: 1.05rem; }
+    .dato { color: var(--gris); font-size: 14px; margin: 0; }
+
+    .etiqueta {
+      align-self: flex-start;
+      font-size: 12px;
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--rosa-claro);
+      color: #8a2350;
+    }
+
+    .acciones { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; }
+
+    #mensaje { min-height: 1.5em; color: var(--hematoxilina); font-weight: 600; }
+
+    .recursos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .recurso {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 3px 12px #4b2a7b14;
+    }
+
+    .recurso h3 { margin-top: 0; }
+    #recursos > h3 { color: var(--hematoxilina); margin: 24px 0 12px; }
+    .recurso a { color: #8a2350; font-weight: 600; }
+
+    .video {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      background: #000;
+    }
+
+    .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+    dialog {
+      border: 0;
+      border-radius: 14px;
+      width: min(520px, 94%);
+      padding: 22px;
+      box-shadow: 0 10px 35px #00000040;
+    }
+
+    dialog::backdrop { background: #2d243880; }
+
+    label { display: block; margin-top: 12px; font-weight: 600; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #d3c8dd;
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    textarea { min-height: 90px; resize: vertical; }
+
+    .botones-formulario { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+    #detalle img { width: 100%; border-radius: 10px; margin-bottom: 10px; }
+
+    footer {
+      background: var(--texto);
+      color: #e8e2ef;
+      text-align: center;
+      padding: 24px 16px;
+      font-size: 14px;
+    }
+
+    footer p { margin: 4px 0; }
+    footer a { color: #f7b3c9; }
+
+    @media (max-width: 520px) {
+      .barra .principal { width: 100%; }
+      .acciones button { flex: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Atlas Histológico</h1>
+    <p>Catálogo de tejidos, tinciones y hallazgos al microscopio</p>
+  </header>
+
+  <nav>
+    <a href="#atlas">Atlas</a>
+    <a href="#recursos">Recursos en la nube</a>
+    <a href="#autor">Autor</a>
+  </nav>
+
+  <main>
+    <section id="atlas">
+      <h2>Tejidos registrados</h2>
+
+      <div class="barra">
+        <input type="search" id="buscar" placeholder="Buscar por nombre o localización...">
+        <button class="principal" onclick="nuevoTejido()">+ Agregar tejido</button>
+      </div>
+
+      <div class="filtros" id="filtros"></div>
+
+      <p id="mensaje" role="status"></p>
+      <div class="tarjetas" id="tarjetas"></div>
+    </section>
+
+    <section id="recursos">
+      <h2>Recursos en la nube</h2>
+      <p>Medios digitales alojados en otras plataformas de servicios en la nube: video, microscopios virtuales, un atlas en línea y mis aplicaciones publicadas.</p>
+
+      <div class="video">
+        <iframe src="https://www.youtube.com/embed/videoseries?list=PLYBvrt5metUVqzTVXP3V1F1yGvbw10deQ"
+          title="Curso práctico de Histología (YouTube)" loading="lazy"
+          allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <h3>Para estudiar histología</h3>
+      <div class="recursos">
+        <div class="recurso">
+          <h3>Microscopio Virtual (CUCS, Universidad de Guadalajara)</h3>
+          <p>Laminillas digitalizadas del Centro Universitario de Ciencias de la Salud para practicar como en el microscopio.</p>
+          <a href="https://microscopiovirtual.cucs.udg.mx/" target="_blank" rel="noopener">Abrir microscopio</a>
+        </div>
+        <div class="recurso">
+          <h3>Atlas de Histología Vegetal y Animal (Universidad de Vigo)</h3>
+          <p>Atlas gratuito en español con texto e imágenes de tejidos y de la célula.</p>
+          <a href="https://mmegias.webs.uvigo.es/" target="_blank" rel="noopener">Abrir atlas</a>
+        </div>
+        <div class="recurso">
+          <h3>Microscopio Virtual (Universidad de Vigo)</h3>
+          <p>Todas las preparaciones del atlas de Vigo para recorrer como en el microscopio.</p>
+          <a href="https://mmegias.webs.uvigo.es/7-micro-virtual/virtual-todas.php" target="_blank" rel="noopener">Ver preparaciones</a>
+        </div>
+        <div class="recurso">
+          <h3>Microscopio Virtual (Red MACRO)</h3>
+          <p>Laminillas digitalizadas de histología para explorar a distintos aumentos desde el navegador.</p>
+          <a href="https://microscopio-redmacro.org/" target="_blank" rel="noopener">Abrir microscopio</a>
+        </div>
+        <div class="recurso">
+          <h3>Curso práctico de Histología (YouTube)</h3>
+          <p>Lista de 40 clases en español de Gloria's Channel, insertada arriba: microscopio, epitelios, tejido conectivo y más.</p>
+          <a href="https://www.youtube.com/playlist?list=PLYBvrt5metUVqzTVXP3V1F1yGvbw10deQ" target="_blank" rel="noopener">Ver lista completa</a>
+        </div>
+      </div>
+
+      <h3>Mis proyectos en la nube</h3>
+      <div class="recursos">
+        <div class="recurso">
+          <h3>Render: sitio web sencillo</h3>
+          <p>Actividad 3.2, sitio estático publicado en Render.</p>
+          <a href="https://three-2-sitio-web-sencillo-a8rr.onrender.com/" target="_blank" rel="noopener">Abrir sitio</a>
+        </div>
+        <div class="recurso">
+          <h3>Render: biblioteca con base de datos</h3>
+          <p>Actividad 3.3, catálogo de libros con PostgreSQL en Render.</p>
+          <a href="https://biblioteca-gabriel-covarrubias.onrender.com" target="_blank" rel="noopener">Abrir aplicación</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="autor">
+    <p><strong>Curso:</strong> Conceptualización de servicios en la nube</p>
+    <p><strong>Producto integrador:</strong> Aplicación web dinámica en un servicio de la nube</p>
+    <p><strong>Nombre de alumno:</strong> Gibran Sinhue Ortega Pelayo</p>
+    <p><strong>Código de alumno:</strong> 216229296</p>
+    <p><strong>Correo electrónico:</strong> <a href="mailto:gibran.ortega2292@alumnos.udg.mx">gibran.ortega2292@alumnos.udg.mx</a></p>
+  </footer>
+
+  <!-- Formulario para agregar y editar -->
+  <dialog id="formulario">
+    <h2 id="titulo-formulario">Agregar tejido</h2>
+    <form id="form-tejido">
+      <label for="nombre">Nombre</label>
+      <input id="nombre" maxlength="120" required>
+
+      <label for="tipo">Tipo de tejido</label>
+      <select id="tipo" required>
+        <option>Epitelial</option>
+        <option>Conectivo</option>
+        <option>Muscular</option>
+        <option>Nervioso</option>
+      </select>
+
+      <label for="localizacion">Localización</label>
+      <input id="localizacion" maxlength="150" required>
+
+      <label for="tincion">Tinción</label>
+      <input id="tincion" maxlength="80" required>
+
+      <label for="aumento">Aumento del objetivo</label>
+      <select id="aumento" required>
+        <option value="4">4x (40x total)</option>
+        <option value="10">10x (100x total)</option>
+        <option value="40" selected>40x (400x total)</option>
+        <option value="100">100x con inmersión (1000x total)</option>
+      </select>
+
+      <label for="descripcion">Descripción</label>
+      <textarea id="descripcion" required></textarea>
+
+      <label for="imagen_url">Enlace a imagen (opcional)</label>
+      <input id="imagen_url" type="url" placeholder="https://...">
+
+      <div class="botones-formulario">
+        <button type="button" class="secundario" onclick="formulario.close()">Cancelar</button>
+        <button type="submit" class="principal">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Ventana para consultar un registro -->
+  <dialog id="ventana-detalle">
+    <div id="detalle"></div>
+    <div class="botones-formulario">
+      <button class="secundario" onclick="ventanaDetalle.close()">Cerrar</button>
+    </div>
+  </dialog>
+
+  <script>
+    const TIPOS = ['Todos', 'Epitelial', 'Conectivo', 'Muscular', 'Nervioso'];
+    const tarjetas = document.getElementById('tarjetas');
+    const mensaje = document.getElementById('mensaje');
+    const formulario = document.getElementById('formulario');
+    const formTejido = document.getElementById('form-tejido');
+    const ventanaDetalle = document.getElementById('ventana-detalle');
+    const campos = ['nombre', 'tipo', 'localizacion', 'tincion', 'aumento', 'descripcion', 'imagen_url'];
+
+    let tipoActivo = 'Todos';
+    let idEdicion = null;
+
+    // Botones de filtro por tipo
+    for (const tipo of TIPOS) {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (tipo === tipoActivo ? ' activo' : '');
+      chip.textContent = tipo;
+      chip.onclick = () => {
+        tipoActivo = tipo;
+        document.querySelectorAll('.chip').forEach(c => c.classList.toggle('activo', c === chip));
+        cargarTejidos();
+      };
+      document.getElementById('filtros').append(chip);
+    }
+
+    let espera;
+    document.getElementById('buscar').addEventListener('input', () => {
+      clearTimeout(espera);
+      espera = setTimeout(cargarTejidos, 300);
+    });
+
+    function crear(etiqueta, clase, texto) {
+      const el = document.createElement(etiqueta);
+      if (clase) el.className = clase;
+      if (texto) el.textContent = texto;
+      return el;
+    }
+
+    // Ocular de 10x: aumento total = objetivo x 10
+    function textoAumento(t) {
+      return `Objetivo ${t.aumento}x${t.aumento === 100 ? ' (inmersión)' : ''} · ${t.aumento * 10}x total`;
+    }
+
+    function imagenDe(tejido) {
+      if (tejido.imagen_url) {
+        const img = document.createElement('img');
+        img.src = tejido.imagen_url;
+        img.alt = tejido.nombre;
+        img.loading = 'lazy';
+        return img;
+      }
+      return crear('div', 'sin-imagen', 'Sin imagen');
+    }
+
+    async function cargarTejidos() {
+      const params = new URLSearchParams();
+      if (tipoActivo !== 'Todos') params.set('tipo', tipoActivo);
+      const texto = document.getElementById('buscar').value.trim();
+      if (texto) params.set('buscar', texto);
+
+      try {
+        const respuesta = await fetch('/api/tejidos?' + params);
+        if (!respuesta.ok) throw new Error();
+        const tejidos = await respuesta.json();
+
+        tarjetas.replaceChildren();
+        mensaje.textContent = `${tejidos.length} tejido(s) encontrado(s)`;
+
+        for (const t of tejidos) {
+          const tarjeta = crear('article', 'tarjeta');
+          const cuerpo = crear('div', 'cuerpo');
+
+          cuerpo.append(
+            crear('span', 'etiqueta', t.tipo),
+            crear('h3', '', t.nombre),
+            crear('p', 'dato', t.localizacion),
+            crear('p', 'dato', 'Tinción: ' + t.tincion),
+            crear('p', 'dato', textoAumento(t))
+          );
+
+          const acciones = crear('div', 'acciones');
+          const ver = crear('button', 'ver', 'Consultar');
+          ver.onclick = () => consultarTejido(t.id);
+          const editar = crear('button', 'editar', 'Editar');
+          editar.onclick = () => editarTejido(t.id);
+          const eliminar = crear('button', 'eliminar', 'Eliminar');
+          eliminar.onclick = () => eliminarTejido(t.id);
+          acciones.append(ver, editar, eliminar);
+
+          cuerpo.append(acciones);
+          tarjeta.append(imagenDe(t), cuerpo);
+          tarjetas.append(tarjeta);
+        }
+      } catch {
+        mensaje.textContent = 'No se pudo cargar el atlas. Revisa la conexión con el servidor.';
+      }
+    }
+
+    async function obtener(id) {
+      const respuesta = await fetch(`/api/tejidos/${id}`);
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.error);
+      return datos;
+    }
+
+    async function consultarTejido(id) {
+      try {
+        const t = await obtener(id);
+        const detalle = document.getElementById('detalle');
+        detalle.replaceChildren();
+        if (t.imagen_url) detalle.append(imagenDe(t));
+        detalle.append(
+          crear('span', 'etiqueta', t.tipo),
+          crear('h2', '', t.nombre),
+          crear('p', 'dato', 'Registro #' + t.id),
+          crear('p', '', 'Localización: ' + t.localizacion),
+          crear('p', '', 'Tinción: ' + t.tincion),
+          crear('p', '', 'Aumento: ' + textoAumento(t)),
+          crear('p', '', t.descripcion)
+        );
+        ventanaDetalle.showModal();
+      } catch (error) {
+        mensaje.textContent = error.message;
+      }
+    }
+
+    function nuevoTejido() {
+      idEdicion = null;
+      formTejido.reset();
+      document.getElementById('titulo-formulario').textContent = 'Agregar tejido';
+      formulario.showModal();
+    }
+
+    async function editarTejido(id) {
+      try {
+        const t = await obtener(id);
+        idEdicion = id;
+        for (const campo of campos) document.getElementById(campo).value = t[campo] ?? '';
+        document.getElementById('titulo-formulario').textContent = 'Editar tejido';
+        formulario.showModal();
+      } catch (error) {
+        mensaje.textContent = error.message;
+      }
+    }
+
+    async function eliminarTejido(id) {
+      if (!confirm('¿Seguro que deseas eliminar este tejido?')) return;
+      try {
+        const respuesta = await fetch(`/api/tejidos/${id}`, { method: 'DELETE' });
+        const resultado = await respuesta.json();
+        if (!respuesta.ok) throw new Error(resultado.error);
+        await cargarTejidos();
+        mensaje.textContent = resultado.mensaje;
+      } catch (error) {
+        mensaje.textContent = error.message;
+      }
+    }
+
+    formTejido.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      const tejido = {};
+      for (const campo of campos) tejido[campo] = document.getElementById(campo).value;
+
+      const editar = idEdicion !== null;
+      try {
+        const respuesta = await fetch(editar ? `/api/tejidos/${idEdicion}` : '/api/tejidos', {
+          method: editar ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(tejido)
+        });
+        const resultado = await respuesta.json();
+        if (!respuesta.ok) throw new Error(resultado.error);
+
+        formulario.close();
+        await cargarTejidos();
+        mensaje.textContent = editar ? 'Tejido actualizado correctamente.' : 'Tejido agregado correctamente.';
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+
+    cargarTejidos();
+  </script>
+</body>
+</html>
